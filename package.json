@@ -1,0 +1,28 @@
+{
+  "name": "robinhood_trading_system",
+  "version": "1.0.0",
+  "description": "trading system for use with robinhood",
+  "main": "index.ts",
+  "scripts": {
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "dev": "ts-node src/index.ts",
+    "start": "nodemon ./dist/app.js"
+  },
+  "keywords": [
+    "robinhood",
+    "trading",
+    "system"
+  ],
+  "author": "Daquaris Chadwick",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^4.17.3",
+    "@types/node": "^13.9.3",
+    "@types/uuid": "^7.0.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "rxjs": "^6.5.4",
+    "uuid": "^7.0.2"
+  }
+}
