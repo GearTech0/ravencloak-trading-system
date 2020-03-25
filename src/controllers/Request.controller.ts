@@ -2,9 +2,12 @@ import https from 'https';
 import qs from 'querystring';
 import { Observable, Observer } from 'rxjs';
 
-export default class RequestController {
+class RequestController {
     private requestOptions: https.RequestOptions = {
         protocol: 'https:',
+        headers: {
+            'Content-Type': 'application/json'
+        }
     };
 
     constructor() {
@@ -57,6 +60,10 @@ export default class RequestController {
     }
 
     public post(url: string, queryParams?: qs.ParsedUrlQuery, body?: any, httpOptions?: https.RequestOptions): Observable<string> {
-        return this.request('POST', body, {...httpOptions, ...this.URLToOptions(url, queryParams)});
+        return this.request('POST', JSON.stringify(body), {...httpOptions, ...this.URLToOptions(url, queryParams)});
     }
 }
+
+const requestController = new RequestController();
+
+export { requestController as RequestController }

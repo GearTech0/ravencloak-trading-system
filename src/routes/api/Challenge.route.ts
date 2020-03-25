@@ -1,65 +1,58 @@
-import { Router, Response, Request } from 'express';
-import { RouteType } from '../Route.type';
-import { Robinhood } from '../../robinhood/robinhood.api';
-import { PathParams } from 'express-serve-static-core';
 import fs from 'fs';
 import path from 'path';
-import RequestController from '../../controllers/Request.controller';
+import { Response, Request } from 'express';
+import { PathParams } from 'express-serve-static-core';
+
+import { RouteType } from '../Router.exports';
+import { Robinhood } from '../../robinhood/Robinhood.api';
+import { RequestController } from '../../controllers/Request.controller';
+import { ReturnEnvelope } from '../../robinhood/Robinhood.exports';
 
 const secure_info = fs.readFileSync(path.join(__dirname, '../../security/secure.json')).toString();
 const parsedSecureInfo = JSON.parse(secure_info);
 
-export default class ChallengeRoute implements RouteType{
-    private handle = Router();
+export default class ChallengeRoute extends RouteType{
     private challenge: any;
-    private https: RequestController;
-    private path: PathParams;
 
     constructor(path: PathParams) {
-        this.path = path;
-        this.https = new RequestController();
+        super(path);
+        
         this.handle.get('/:type', (req: Request, res: Response) => {
-            if (Robinhood.status == 'challenge') {
+            if (Robinhood.users[parsedSecureInfo.username].getStatus() == 'challenge-type') {
                 var type = (<'sms' | 'email'>req.param('type'));
                 Robinhood.login(parsedSecureInfo.username, parsedSecureInfo.password, type)
-                    .subscribe((challenge) => {
-                        this.challenge = challenge;
+                    .subscribe((returnEnvelope: ReturnEnvelope) => {
+                        this.challenge = returnEnvelope.data;
                         res.status(200).json(this.challenge);
                     });
             } else {
-                res.status(400).json({message: "A challenge is not expected."});
+                res.status(400).json({message: "A challenge type is not expected."});
             }
         })
 
         this.handle.post('/respond', (req: Request, res: Response) => {
             if (req.body.response) {
-                const options = {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-                this.https
-                    .post(`https://api.robinhood.com/challenge/${this.challenge.id}/respond/`, null, JSON.stringify({response: req.body.response}), options)
-                    .subscribe((data) => {
-                        const challengeResponse = JSON.parse(data);
-                        if (challengeResponse.status == 'validated') {
-                            Robinhood.login(parsedSecureInfo.username, parsedSecureInfo.password, this.challenge.type, this.challenge.id)
-                                .subscribe((val) => {
-                                    console.log(val);
-                                    Robinhood.status = 'logged-in';
-                                    res.status(200).json({message: "Logged in"});
-                                });
-                        } else {
-                            res.status(400).json({message: challengeResponse})
+                RequestController
+                    .post(`https://api.robinhood.com/challenge/${this.challenge.id}/respond/`, null, {response: req.body.response})
+                    .subscribe((data: string) => {
+                        try {
+                            const challengeResponse = JSON.parse(data);
+                            if (challengeResponse.status == 'validated') {
+                                Robinhood.login(parsedSecureInfo.username, parsedSecureInfo.password, this.challenge.type, this.challenge.id)
+                                    .subscribe((returnEnvelope: ReturnEnvelope) => {
+                                        res.status(200).json(returnEnvelope);
+                                    });
+                            } else {
+                                res.status(400).json({message: challengeResponse})
+                            }
+                        } catch(e) {
+                            console.error(e);
+                            res.status(400).json({message: data});
                         }
                     });
             } else {
                 res.status(400).json({message: "No response added to body"});
             }
         });
-    }
-
-    public Register(router: Router): void {
-        router.use(this.path, this.handle);
     }
 }

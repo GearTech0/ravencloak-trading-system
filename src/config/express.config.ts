@@ -5,7 +5,7 @@ import {
 } from 'express';
 import express from 'express';
 import cors from 'cors';
-import router from '../routes/api.route';
+import router from '../routes/Router';
 
 class ExpressConfiguration {
     public app: Application;

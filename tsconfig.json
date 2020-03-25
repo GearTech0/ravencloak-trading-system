@@ -19,7 +19,7 @@
     },
     "files": [
         "src/index.ts",
-        "src/types/custom.d.ts"
+        "src/types/custom/index.d.ts"
     ],
     "include": [
         "src/**/*"
