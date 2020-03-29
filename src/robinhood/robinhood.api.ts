@@ -3,7 +3,7 @@ import { map } from 'rxjs/operators';
 import { parse as QueryParse, stringify as QueryStringify } from 'querystring';
 
 import RobinhoodUser from './classes/User.class';
-import { RequestController } from '../controllers/Request.controller';
+import { HTTPS } from '../controllers/Request.controller';
 import { ReturnEnvelope, ROBINHOOD_HOST } from './Robinhood.exports';
 
 export class RobinhoodAPI {
@@ -32,29 +32,6 @@ export class RobinhoodAPI {
             status: 'error',
             data: null
         });
-    }
-
-    public getInstrument(): Observable<ReturnEnvelope> {
-        const apiPath = '/marketdata/historicals/SPYG/';
-        const params = {
-            bounds: 'trading',
-            interval: '5minute',
-            span: 'day'
-        }
-
-        // This just gets historicals. Update to get the Instrument itself then download 
-        // its specific market data for the day
-        return RequestController
-            .get(`https://${ROBINHOOD_HOST}${apiPath}`, params)
-            .pipe(map((data: string, index: number) => {
-                const response = JSON.parse(data);
-
-                return {
-                    message: '',
-                    status: 'error',
-                    data: response
-                };
-            }));
     }
 }
 

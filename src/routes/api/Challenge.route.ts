@@ -5,10 +5,10 @@ import { PathParams } from 'express-serve-static-core';
 
 import { RouteType } from '../Router.exports';
 import { Robinhood } from '../../robinhood/Robinhood.api';
-import { RequestController } from '../../controllers/Request.controller';
+import { HTTPS } from '../../controllers/Request.controller';
 import { ReturnEnvelope } from '../../robinhood/Robinhood.exports';
 
-const secure_info = fs.readFileSync(path.join(__dirname, '../../security/secure.json')).toString();
+const secure_info = fs.readFileSync(path.join(__dirname, '../../security/auth.security.json')).toString();
 const parsedSecureInfo = JSON.parse(secure_info);
 
 export default class ChallengeRoute extends RouteType{
@@ -32,7 +32,7 @@ export default class ChallengeRoute extends RouteType{
 
         this.handle.post('/respond', (req: Request, res: Response) => {
             if (req.body.response) {
-                RequestController
+                HTTPS
                     .post(`https://api.robinhood.com/challenge/${this.challenge.id}/respond/`, null, {response: req.body.response})
                     .subscribe((data: string) => {
                         try {

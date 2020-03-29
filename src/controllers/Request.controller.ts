@@ -18,7 +18,7 @@ class RequestController {
         const requestURL = new URL(url);
         return (<https.RequestOptions> {
             hostname: requestURL.hostname,
-            path: requestURL.pathname + ((queryParams) ? qs.stringify(queryParams) : ''),
+            path: requestURL.pathname + ((queryParams) ? `?${qs.stringify(queryParams)}` : ''),
         });
     }
 
@@ -66,4 +66,4 @@ class RequestController {
 
 const requestController = new RequestController();
 
-export { requestController as RequestController }
+export { requestController as HTTPS }

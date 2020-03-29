@@ -4,15 +4,15 @@ import { v4 } from 'uuid';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { RequestController } from '../../controllers/Request.controller';
-import { ROBINHOOD_HOST, RobinhoodUserStatus, ReturnEnvelope } from '../Robinhood.exports';
+import { HTTPS } from '../../controllers/Request.controller';
+import { ROBINHOOD_HOST, UserStatus, ReturnEnvelope, AccessTokenResponse } from '../Robinhood.exports';
 
 export default class RobinhoodUser {
     public username: string;
     public deviceID: string = v4();
-    public token: object = null;
+    public token: AccessTokenResponse = null;
     
-    private status: RobinhoodUserStatus = 'no-auth';
+    private status: UserStatus = 'no-auth';
     private cachePath: string;
     private clientID = 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS';
 
@@ -35,8 +35,12 @@ export default class RobinhoodUser {
 
     }
 
-    public getStatus(): RobinhoodUserStatus {
+    public getStatus(): UserStatus {
         return this.status;
+    }
+
+    public getMyAuthToken(): string {
+        return `${this.token.token_type} ${this.token.access_token}`;
     }
 
     public static readCache(cachePath: string): any {
@@ -93,7 +97,7 @@ export default class RobinhoodUser {
             body['challenge_type'] = challengeType;
         } 
 
-        return RequestController
+        return HTTPS
             .post(`https://${ROBINHOOD_HOST}${apiPath}`, null, body, options)
             .pipe(
                 map((data: string, index: number) => {
@@ -154,7 +158,7 @@ export default class RobinhoodUser {
             token: parsedCachedUser.token.refresh_token
         };
 
-        return RequestController
+        return HTTPS
                     .post(`https://api.robinhood.com${apiPath}`, null, body)
                     .pipe(
                         map((data: string, index: number) => {
