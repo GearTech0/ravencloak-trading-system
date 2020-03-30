@@ -16,11 +16,6 @@ export default class UserRoute extends RouteType{
                 console.log(request.body);
                 Robinhood
                     .login(request.body.username, request.body.password)
-                    .pipe(map((returnEnvelope: ReturnEnvelope, index: number) => {
-                        return Instrument.GetInstrument('SPYG', true)
-                    }),
-                    concatAll()
-                    )
                     .subscribe((returnEnvelope: ReturnEnvelope) => {
                         response.status(200).json(returnEnvelope);
                     });

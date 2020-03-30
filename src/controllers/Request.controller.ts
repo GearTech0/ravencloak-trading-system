@@ -1,9 +1,18 @@
-import https from 'https';
-import qs from 'querystring';
-import { Observable, Observer } from 'rxjs';
+import {
+    request as Request,
+    RequestOptions
+} from 'https';
+import {
+    ParsedUrlQuery,
+    stringify as QueryToString
+} from 'querystring';
+import { 
+    Observable, 
+    Observer 
+} from 'rxjs';
 
 class RequestController {
-    private requestOptions: https.RequestOptions = {
+    private requestOptions: RequestOptions = {
         protocol: 'https:',
         headers: {
             'Content-Type': 'application/json'
@@ -14,19 +23,20 @@ class RequestController {
 
     }
 
-    private URLToOptions(url: string, queryParams?: qs.ParsedUrlQuery): https.RequestOptions {
+    private URLToOptions(url: string, queryParams?: ParsedUrlQuery): RequestOptions {
         const requestURL = new URL(url);
-        return (<https.RequestOptions> {
+        return (<RequestOptions> {
             hostname: requestURL.hostname,
-            path: requestURL.pathname + ((queryParams) ? `?${qs.stringify(queryParams)}` : ''),
+            path: requestURL.pathname + ((queryParams) ? `?${QueryToString(queryParams)}` : ''),
         });
     }
 
-    private request(method: string, body?: any, httpOptions?: https.RequestOptions): Observable<string> {
+    private request(method: string, body?: any, httpOptions?: RequestOptions): Observable<string> {
         return new Observable((obs: Observer<string>) => {
             this.requestOptions.method = method;
             const options = {...this.requestOptions, ...httpOptions};
-            const req = https.request(options);
+            console.log(options);
+            const req = Request(options);
             
             // If there is a body, append it to the request
             if (body) {
@@ -55,11 +65,11 @@ class RequestController {
         });
     }
 
-    public get(url: string, queryParams?: qs.ParsedUrlQuery, httpOptions?: https.RequestOptions): Observable<string> {
+    public get(url: string, queryParams?: ParsedUrlQuery, httpOptions?: RequestOptions): Observable<string> {
         return this.request('GET', null, {...httpOptions, ...this.URLToOptions(url, queryParams)});
     }
 
-    public post(url: string, queryParams?: qs.ParsedUrlQuery, body?: any, httpOptions?: https.RequestOptions): Observable<string> {
+    public post(url: string, queryParams?: ParsedUrlQuery, body?: any, httpOptions?: RequestOptions): Observable<string> {
         return this.request('POST', JSON.stringify(body), {...httpOptions, ...this.URLToOptions(url, queryParams)});
     }
 }

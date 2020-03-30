@@ -10,7 +10,10 @@ import {
     ROBINHOOD_HOST,
     HistoryRecord,
     HistoricalBag,
-    RobinhoodStatus
+    RobinhoodStatus,
+    InstrumentInformation,
+    InstrumentReference,
+    Quote
 } from "../Robinhood.exports";
 import { OutgoingHttpHeaders } from "http";
 import { HTTPS } from '../../controllers/Request.controller';
@@ -18,12 +21,44 @@ import { ParsedUrlQuery } from "querystring";
 
 // See how robinhood updates/adds the open_price
 export default class Instrument {
-    public information: any;
-    public status: InstrumentStatus;
+    public information: InstrumentInformation;
+    public status: InstrumentStatus = 'fresh';
     public historicalBag: HistoricalBag;
+    public quoteHistory: Array<Quote>;
 
-    constructor(information: any) {
+    constructor(information: InstrumentInformation) {
         this.information = information;
+        if (this.information) {
+            this.status = 'loaded';
+        }
+    }
+    public getQuote(auth: string): Observable<ReturnEnvelope> {
+        const apiPath = `/marketdata/quotes/${this.information.symbol}/`;
+        const options = {
+            headers: {
+                authorization: auth
+            }
+        };
+
+        return HTTPS
+            .get(`https://${ROBINHOOD_HOST}${apiPath}`, null, options)
+            .pipe(map((data: string) => {
+                try {
+                    const quote: Quote = JSON.parse(data);
+                    this.quoteHistory.push(quote);
+                    return {
+                        message: '',
+                        status: 'loaded',
+                        data: quote
+                    };
+                } catch (e) {
+                    return {
+                        message: 'Error fetching quote',
+                        status: 'error',
+                        data: data
+                    };
+                }
+            }));
     }
 
     /**
@@ -31,15 +66,15 @@ export default class Instrument {
      * @param identifier 
      * @param isSymbol 
      */
-    public static GetInstrument(identifier: string, isSymbol: boolean = false): Observable<ReturnEnvelope> {
+    public static GetInstrument(instrumentReference: InstrumentReference): Observable<ReturnEnvelope> {
         let apiPath = `/instruments/`;
         let queryParams = null;
-        if (isSymbol) {
-            queryParams = {
-                symbol: identifier
-            };
+        if (instrumentReference.instrument_id) {
+            apiPath = `${apiPath}${instrumentReference.instrument_id}/`;
         } else {
-            apiPath = `${apiPath}${identifier}/`;
+            queryParams = {
+                symbol: instrumentReference.symbol
+            };
         }
 
         return HTTPS
@@ -51,7 +86,7 @@ export default class Instrument {
                     return {
                         message: 'Instrument Information',
                         status: 'loaded',
-                        data: (instrumentInformation.results) ? instrumentInformation.results : instrumentInformation
+                        data: (instrumentInformation.results) ? instrumentInformation.results[0] : instrumentInformation
                     }
 
                 } catch (e) {
@@ -115,8 +150,10 @@ export default class Instrument {
             });
         }
 
-        const options: OutgoingHttpHeaders = {
-            Authentication: auth
+        const options = {
+            headers: {
+                authorization: auth
+            }
         };
         const queryParams: ParsedUrlQuery = {
             interval: iterationInfo.interval,
