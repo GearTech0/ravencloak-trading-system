@@ -58,7 +58,11 @@ export default class InstrumentRoute extends RouteType {
 
         this.handle.post('/:type/:id/quote', (request: Request, response: Response) => {
             this.Try(response, () => {
-
+                Robinhood
+                    .getQuote(request.headers.authorization, request['instrRef'])
+                    .subscribe((returnEnvelope: ReturnEnvelope) => {
+                        response.status(200).json(returnEnvelope);
+                    });
             });
         });
 

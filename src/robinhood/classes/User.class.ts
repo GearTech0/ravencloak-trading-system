@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 } from 'uuid';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { HTTPS } from '../../controllers/Request.controller';
@@ -33,6 +33,10 @@ export default class RobinhoodUser {
             this.username = username;
         }
 
+    }
+
+    public sellOption(): Observable<ReturnEnvelope> {
+        return of();
     }
 
     public getStatus(): UserStatus {

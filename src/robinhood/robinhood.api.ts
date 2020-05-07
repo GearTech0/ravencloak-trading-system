@@ -6,6 +6,7 @@ import RobinhoodUser from './classes/User.class';
 import { HTTPS } from '../controllers/Request.controller';
 import { ReturnEnvelope, ROBINHOOD_HOST, IterateParams, InstrumentReference } from './Robinhood.exports';
 import Instrument from './classes/Instrument.class';
+import { threadId } from 'worker_threads';
 
 export class RobinhoodAPI {
     public users: Map<string, RobinhoodUser> = new Map();
@@ -68,6 +69,26 @@ export class RobinhoodAPI {
         }
         return this.instruments[instrumentIndex]
                 .initHistory(auth, iterationInfo);
+    }
+
+    public getQuote(auth: string, instrumentReference: InstrumentReference): Observable<ReturnEnvelope> {
+        let instrumentIndex: number;
+        let identifier: string = instrumentReference.instrument_id || instrumentReference.symbol;
+        try {
+            this.Exists(identifier, 'instrument');
+
+            instrumentIndex = this.instrumentPositionMap.get(identifier);
+        } catch (e) {
+            return of({
+                message: e,
+                status: 'error',
+                data: {
+                    identifier: identifier
+                }
+            });
+        }
+        return this.instruments[instrumentIndex]
+                .getQuote(auth);
     }
 
     public addInstrument(instrumentReference: InstrumentReference, loadHistory: boolean = false, auth: string = ''): Observable<ReturnEnvelope> {

@@ -19,12 +19,11 @@ import { OutgoingHttpHeaders } from "http";
 import { HTTPS } from '../../controllers/Request.controller';
 import { ParsedUrlQuery } from "querystring";
 
-// See how robinhood updates/adds the open_price
 export default class Instrument {
     public information: InstrumentInformation;
     public status: InstrumentStatus = 'fresh';
     public historicalBag: HistoricalBag;
-    public quoteHistory: Array<Quote>;
+    public quoteHistory: Array<Quote> = [];
 
     constructor(information: InstrumentInformation) {
         this.information = information;
@@ -32,6 +31,7 @@ export default class Instrument {
             this.status = 'loaded';
         }
     }
+
     public getQuote(auth: string): Observable<ReturnEnvelope> {
         const apiPath = `/marketdata/quotes/${this.information.symbol}/`;
         const options = {
